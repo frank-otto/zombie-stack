@@ -136,6 +136,8 @@ async def main():
         async with pg.expect_download() as dl: await pg.click('#btnCard')
         d = await dl.value; await d.save_as(OUT + 'card.png'); im = Image.open(OUT + 'card.png')
         check('share card 1080×1350 PNG download', im.size == (1080, 1350) and d.suggested_filename == 'my-zombie-tower.png', (im.size, d.suggested_filename))
+        snap = await pg.evaluate('[window.__zsCardSnap, __zs.S.bestSnap && __zs.S.bestSnap.list.length, +window.__zsCardLive.toFixed(2), +__zs.S.maxH.toFixed(2)]')
+        check('after the collapse the card rebuilds the tower as it stood at its best height', snap[0] >= 20 and snap[0] == snap[1] and snap[2] < snap[3] - .25, snap)
         check('share card not black, no glare', mean(OUT + 'card.png') > 20 and bright_share(OUT + 'card.png') < .01, (round(mean(OUT + 'card.png'), 1), round(bright_share(OUT + 'card.png'), 5)))
         await pg.click('#btnMenu'); await pg.evaluate('__zs.step(1/30, 5)')
         check('menu shows the classic highscore', 'm' in await pg.text_content('#bestClassic'), await pg.text_content('#bestClassic'))

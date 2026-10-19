@@ -175,7 +175,7 @@ let thunderT = 5, crowT = 14; function ambient(dt) { thunderT -= dt; if (thunder
 
 // ---------------- flow ----------------
 function clearPieces() { for (const c of constraints) world.removeConstraint(c.c); constraints.length = 0; for (const P of pieces) { if (P.body.world) world.removeBody(P.body); scene.remove(P.g); disposePiece(P); } pieces.length = 0; tower.length = 0; cur = null; queue = []; for (const r of rings) { scene.remove(r.m); r.m.geometry.dispose(); r.m.material.dispose(); } rings.length = 0; }
-function resetRun() { clearTimers(); clearPieces(); S.score = 0; S.combo = 0; S.bestCombo = 0; S.perfects = 0; S.H = 0; S.maxH = 0; S.topY = BASE_TOP; S.n = 0; S.ms = 0; S.glue = 0; S.slow = 0; S.freezeT = 0; S.wind = 0; S.gust = null; S.gustNext = 10; S.phi = 0; S.phiV = 0; S.ts = 1; S.end = ''; S.newBest = false; S.dropN = 0; S.bonusT = 0; lostAt.length = 0;
+function resetRun() { clearTimers(); clearPieces(); S.score = 0; S.combo = 0; S.bestCombo = 0; S.perfects = 0; S.H = 0; S.maxH = 0; S.topY = BASE_TOP; S.n = 0; S.ms = 0; S.glue = 0; S.slow = 0; S.freezeT = 0; S.wind = 0; S.gust = null; S.gustNext = 10; S.phi = 0; S.phiV = 0; S.ts = 1; S.end = ''; S.newBest = false; S.dropN = 0; S.bonusT = 0; S.bestSnap = null; lostAt.length = 0;
   W.moon = 0; W.stars = 0; S.moonT = null; S.starT = null; nextId = 1; }
 function start(mode) { A.unlock(); resetRun(); S.mode = mode; S.state = 'play'; S.lives = S.kids ? 0 : D().lives; S.timeLeft = D().time; window.__banners = [];
   $('end').classList.remove('show'); $('menu').classList.remove('show'); music.start('game', S.gt + .3); music.vol = .9; music.I = 0; A.sfx.ui(); A.sfx.stinger();
@@ -183,11 +183,13 @@ function start(mode) { A.unlock(); resetRun(); S.mode = mode; S.state = 'play'; 
   $('hint').textContent = t(isTouch ? 'hintT' : 'hint'); setTimer(.8, () => $('hint').classList.add('show')); setTimer(9, () => $('hint').classList.remove('show')); setUI(); renderPowers(); }
 function toMenu() { resetRun(); S.state = 'menu'; $('menu').classList.add('show'); $('end').classList.remove('show'); music.start('menu', S.gt + .4); music.vol = .8; demoTower(); applyLang(); setUI(); }
 function demoTower() { cheatStack(4, true); S.nextAt = S.gt + .2; }
+// remember the tower at its best height, so the share card can show that tower even after a collapse
+function snapBest() { S.bestSnap = { H: S.H, top: towerTop().y, list: tower.map(P => ({ type: P.type, seed: P.seed, p: [P.body.position.x, P.body.position.y, P.body.position.z], q: [P.body.quaternion.x, P.body.quaternion.y, P.body.quaternion.z, P.body.quaternion.w] })) }; }
 // instant perfect stack (menu decoration, tests, video)
 function cheatStack(n, demo) { for (let i = 0; i < n; i++) { while (queue.length < 2) genNext(); const q = queue.shift(); genNext(); const P = makePiece(i < 2 && demo ? 'coffin' : q.type, 500 + nextId * 13, null); P.id = nextId++; scene.add(P.g); pieces.push(P); P.body.addEventListener('collide', e => onCollide(P, e));
     const tt = towerTop(); const below = tt.P; P.body.position.set(below ? below.body.position.x : 0, tt.y + P.size[1] / 2 + .002, 0); P.body.quaternion.set(0, 0, 0, 1); P.body.linearFactor.set(1, 1, 0); P.body.angularFactor.set(0, 0, 1); world.addBody(P.body);
     P.state = 'tower'; P.below = below; tower.push(P); lockTo(P, below); S.n++; } tower.forEach(P => { if (tower.indexOf(P) < tower.length - KEEP) freezePiece(P); }); const tt = towerTop(); S.topY = tt.y; S.H = tt.y - BASE_TOP; S.maxH = Math.max(S.maxH, S.H);
-  if (!demo) { while (S.ms < MILESTONES.length && S.H >= MILESTONES[S.ms]) S.ms++; if (S.H >= 10) W.moon = 1; if (S.H >= 15) W.stars = 1; } S.focus = S.topY + 1.2; pivot.y = S.topY + 1.3 + ROPE + CLAW + 1.0; }
+  if (!demo) { while (S.ms < MILESTONES.length && S.H >= MILESTONES[S.ms]) S.ms++; if (S.H >= 10) W.moon = 1; if (S.H >= 15) W.stars = 1; } S.focus = S.topY + 1.2; pivot.y = S.topY + 1.3 + ROPE + CLAW + 1.0; if (!demo) snapBest(); }
 
 // ---------------- UI ----------------
 function setUI() { const st = S.state; document.body.dataset.state = st; document.body.dataset.mode = S.mode; document.body.dataset.kids = S.kids ? '1' : '0';
@@ -234,11 +236,21 @@ window.addEventListener('resize', resize); document.addEventListener('pointerdow
 async function makeCard() {
   S.name = ($('eName').value || '').trim() || 'Player'; ls.set('zs-name', S.name); try { await document.fonts.load('700 40px Fredoka'); } catch (e) {}
   const CW = 1080, CH = 1350; renderer.setPixelRatio(1); renderer.setSize(CW, CH, false); composer.setPixelRatio(1); composer.setSize(CW, CH); bloom.strength = .22;
-  const old = { a: camera.aspect, f: camera.fov, p: camera.position.clone(), q: camera.quaternion.clone() }; const top = Math.max(BASE_TOP + 2, S.topY + .6);
-  camera.clearViewOffset(); camera.aspect = CW / CH; camera.fov = 40; camera.updateProjectionMatrix(); const cy = top * .5 + .9, dist = Math.max(8, (top * .5 + 2.6) / Math.tan(THREE.MathUtils.degToRad(20)) * .95);
-  camera.position.set(dist * .14, cy + 1.2, dist); camera.lookAt(0, cy - .4, 0); camera.updateMatrixWorld(); W.sky.position.copy(camera.position); composer.render();
+  const old = { a: camera.aspect, f: camera.fov, p: camera.position.clone(), q: camera.quaternion.clone() };
+  // after a collapse, rebuild the tower exactly as it stood at its best height (live pieces hidden while the card renders)
+  const B = S.bestSnap, liveH = Math.max(0, towerTop().y - BASE_TOP), useSnap = !!(B && B.list.length && liveH < B.H - .25), hidden = [], ghosts = [];
+  if (useSnap) { for (const P of pieces) if (P.g.visible) { P.g.visible = false; hidden.push(P); }
+    for (const it of B.list) { const G = makePiece(it.type, it.seed, null); G.g.position.set(...it.p); G.g.quaternion.set(...it.q); animatePiece(G, S.gt, 0, 'tower'); scene.add(G.g); ghosts.push(G); } }
+  window.__zsCardSnap = useSnap ? B.list.length : 0; window.__zsCardLive = liveH;
+  const top = Math.max(BASE_TOP + 2, (useSnap ? B.top : S.topY) + .6);
+  camera.clearViewOffset(); camera.aspect = CW / CH; camera.fov = 40; camera.updateProjectionMatrix(); // fit the whole tower into the free band between the headline and the stats line (about 30%..80% of the card height)
+  const tn = Math.tan(THREE.MathUtils.degToRad(20)), hT = top + .3, cy = top * .5 - .15, dist = Math.max(8, hT / (2 * tn * .54)), ly = cy + .1 * dist * tn;
+  camera.position.set(dist * .14, ly + 1.2, dist); camera.lookAt(0, ly, 0);
+  // a tall tower is shot from far away: thin the fog to match and add a soft front light so it doesn't sink into the dark
+  const fog0 = scene.fog.density; scene.fog.density = fog0 * Math.min(1, 16 / dist); const cardL = new THREE.DirectionalLight('#c4ccff', Math.min(1.1, Math.max(0, (dist - 12) * .04)));
+  cardL.position.set(dist * .3, ly + 4, dist); cardL.target.position.set(0, ly, 0); scene.add(cardL, cardL.target); camera.updateMatrixWorld(); W.sky.position.copy(camera.position); composer.render();
   const c = document.createElement('canvas'); c.width = CW; c.height = CH; const k = c.getContext('2d'); k.drawImage(renderer.domElement, 0, 0, CW, CH);
-  camera.aspect = old.a; camera.fov = old.f; camera.position.copy(old.p); camera.quaternion.copy(old.q); resize();
+  camera.aspect = old.a; camera.fov = old.f; camera.position.copy(old.p); camera.quaternion.copy(old.q); resize(); scene.fog.density = fog0; scene.remove(cardL, cardL.target); cardL.dispose(); for (const G of ghosts) { scene.remove(G.g); disposePiece(G); } for (const P of hidden) P.g.visible = true;
   const gr = k.createLinearGradient(0, 0, 0, CH); gr.addColorStop(0, 'rgba(6,8,16,.92)'); gr.addColorStop(.26, 'rgba(6,8,16,.05)'); gr.addColorStop(.68, 'rgba(6,8,16,.08)'); gr.addColorStop(1, 'rgba(6,8,16,.95)'); k.fillStyle = gr; k.fillRect(0, 0, CW, CH);
   const Fo = (w, s) => `${w} ${s}px Fredoka, "Arial Rounded MT Bold", sans-serif`; k.textAlign = 'center'; k.lineJoin = 'round';
   const txt = (s, x, y, fill, stroke = 'rgba(8,10,20,.88)', lw = 8) => { k.strokeStyle = stroke; k.lineWidth = lw; k.strokeText(s, x, y); k.fillStyle = fill; k.fillText(s, x, y); };
@@ -302,7 +314,7 @@ function step(dt) {
   // freeze old pieces (they keep swaying on the oscillator); slowly settle the live ones
   if (st === 'play') { for (let i = 0; i < tower.length - KEEP; i++) { const P = tower[i]; if (!P.frozen && P.body.velocity.length() < .25) freezePiece(P); } }
   // tower height
-  const tt = towerTop(); S.topY = lerp(S.topY, tt.y, 1 - Math.exp(-dt * 6)); if (st === 'play') { S.H = Math.max(0, tt.y - BASE_TOP); S.maxH = Math.max(S.maxH, S.H); checkMilestones(); }
+  const tt = towerTop(); S.topY = lerp(S.topY, tt.y, 1 - Math.exp(-dt * 6)); if (st === 'play') { S.H = Math.max(0, tt.y - BASE_TOP); S.maxH = Math.max(S.maxH, S.H); if (S.H > .05 && S.H >= (S.bestSnap ? S.bestSnap.H : 0) - .002 && !pieces.some(P => P.state === 'fall')) snapBest(); checkMilestones(); }
   if (st === 'collapse') { let sy = 0, n = 0; for (const P of tower) { sy += P.body.position.y; n++; } S.collY = n ? sy / n : 2; }
   // timers: timed mode, power-ups, wind gusts
   if (st === 'play') { if (S.mode === 'timed') { const before = Math.ceil(S.timeLeft); S.timeLeft -= dt; if (Math.ceil(S.timeLeft) !== before && S.timeLeft < 10 && S.timeLeft > 0) A.sfx.tick(); if (S.timeLeft <= 0) { S.end = 'timed'; finishTimed(); } }
