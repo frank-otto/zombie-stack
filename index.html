@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>Zombie Stack – build the tallest tower of the undead</title>
+<meta name="description" content="A cinematic 3D physics stacking game for Halloween: a creaking crane swings zombies, coffins, tombstones and pumpkins over an open crypt. Drop them and build the tallest wobbling tower of the undead into the stormy night sky.">
+<meta name="theme-color" content="#06080f">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ctext y=%22.9em%22 font-size=%2290%22%3E%F0%9F%A7%9F%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body data-state="menu">
+<canvas id="game" aria-label="Zombie Stack game"></canvas>
+<div id="flash"></div>
+<div id="pops"></div>
+<div id="marker"></div>
+<div id="banner"></div>
+<div id="hud">
+  <div class="chip big" id="hHBox"><small data-t="heightL">Height</small><b id="hH">0.0 m</b></div>
+  <div class="chip" id="hScoreBox"><small data-t="scoreL">Score</small><b id="hScore">0</b></div>
+  <div class="chip" id="hLivesBox"><b id="hLives"></b></div>
+  <div class="chip" id="hTimeBox"><b id="hTime"></b></div>
+  <div class="chip hot" id="hComboBox" style="display:none"><b id="hCombo"></b></div>
+</div>
+<div id="side"><div class="chip" id="nextBox"></div><div id="powers"></div><div class="chip" id="windBox" style="display:none"></div></div>
+<div id="hint"></div>
+<div id="top">
+  <button id="btnQuit" class="pill" aria-label="Finish">✕</button>
+  <button id="btnQ" class="pill">⚙</button>
+  <button id="btnSound" class="pill on" aria-label="Sound">🔊</button>
+  <button id="btnLang" class="pill">DE</button>
+</div>
+<div id="toast"></div>
+<section id="menu" class="panel show">
+  <h1><span class="fl">🧟</span> Zombie Stack</h1>
+  <p class="sub" data-t="sub"></p>
+  <button id="btnClassic" class="big"><span data-t="classic"></span><small data-t="classicSub"></small><em id="bestClassic"></em></button>
+  <button id="btnTimed" class="big alt"><span data-t="timed"></span><small data-t="timedSub"></small><em id="bestTimed"></em></button>
+  <div id="diff" role="group"><button data-d="easy" data-t="easy"></button><button data-d="medium" data-t="medium"></button><button data-d="hard" data-t="hard"></button></div>
+  <div class="row"><button id="btnKids" class="toggle" aria-pressed="false"><i></i><span data-t="kidsMode"></span></button></div>
+  <p class="tip kidsTip" data-t="kidsHint"></p>
+  <p class="tip keys" id="keysTip"></p>
+  <p class="tip" data-t="credit"></p>
+</section>
+<section id="end" class="panel">
+  <h2 id="eTitle"></h2>
+  <div id="eRank" class="rank"></div>
+  <div id="eH" class="score">0.0 m</div>
+  <div id="eScore" class="escore"></div>
+  <div id="eBest" class="best"></div>
+  <div id="eStats" class="stats"></div>
+  <label class="name"><span data-t="yourName">Your name</span><input id="eName" maxlength="18" value="Player" autocomplete="off"></label>
+  <div class="row"><button id="btnCard" data-t="card"></button><button id="btnShare" data-t="share"></button></div>
+  <div class="row"><button id="btnAgain" class="big" data-t="again"></button><button id="btnMenu" data-t="menu"></button></div>
+</section>
+<script src="js/sounds-src.js"></script>
+<script src="js/game.bundle.js"></script>
+</body>
+</html>
