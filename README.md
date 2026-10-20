@@ -2,7 +2,7 @@
 
 Day 11 of a daily Halloween web-game series – **9 days to Halloween 🎃**
 
-Play: **https://frank-otto.github.io/zombie-stack/**
+Play: **[online version (GitHub Pages)](https://frank-otto.github.io/zombie-stack/)**
 
 Midnight in the graveyard. A creaky crane swings zombies, coffins, tombstones and pumpkins over an open crypt. Drop them at the right moment and build the tallest wobbling tower of the undead – in real 3D with real physics.
 

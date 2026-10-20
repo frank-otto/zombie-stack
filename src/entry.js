@@ -11,7 +11,7 @@ import { Player } from './music.js';
 import * as A from './audio.js';
 import { T } from './i18n.js';
 
-const URL_TXT = 'frank-otto.github.io/zombie-stack';
+const URL_TXT = '@Frank_AI_Lab';
 const $ = id => document.getElementById(id);
 const ls = { get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : v; } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} } };
 let seed = (window.__zsSeed || (Date.now() & 0xffffff)) >>> 0;
@@ -263,7 +263,7 @@ async function makeCard() {
 }
 async function saveCard(share) {
   const c = await makeCard(); const blob = await new Promise(r => c.toBlob(r, 'image/png')); const file = new File([blob], 'my-zombie-tower.png', { type: 'image/png' });
-  if (share && navigator.canShare && navigator.canShare({ files: [file] })) { try { await navigator.share({ files: [file], text: `Zombie Stack — ${fmtH(S.maxH)}! ${t('cardTag')} https://${URL_TXT}/` }); return; } catch (e) { if (e && e.name === 'AbortError') return; } }
+  if (share && navigator.canShare && navigator.canShare({ files: [file] })) { try { await navigator.share({ files: [file], text: `Zombie Stack — ${fmtH(S.maxH)}! ${t('cardTag')} ${URL_TXT}` }); return; } catch (e) { if (e && e.name === 'AbortError') return; } }
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'my-zombie-tower.png'; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500); toast(t('saved'));
 }
 
