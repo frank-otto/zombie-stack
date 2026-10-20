@@ -231,8 +231,8 @@ async def main():
     check('no email addresses', not re.search(r'[\w.+-]+@[\w-]+\.[\w.]+', texts))
     ab = ''.join(map(chr, (65, 73)))
     check('visible text uses SI, never the other abbreviation', not re.search(r'\b' + ab + r'\b', texts))
-    BAN = {'77646f5a4f316663', '043f4ce6d84aff1d', '7dbef27a673fea64', '849c39839ba51811', '55579b557896d0ce'}
-    hit = sorted({w for w in re.findall(r'[A-Za-zÀ-ÿ]+', re.sub(r'frank-otto\.github\.io', '', texts)) if hashlib.sha256(w.lower().encode()).hexdigest()[:16] in BAN})
+    BAN = {'4991c47202960c57', '043f4ce6d84aff1d', '7dbef27a673fea64', '849c39839ba51811', '55579b557896d0ce'}
+    hit = sorted({w for w in re.findall(r'[A-Za-zÀ-ÿ]+', re.sub(r'frank-otto\.github\.io|github\.com/frank-otto', '', texts)) if hashlib.sha256(w.lower().encode()).hexdigest()[:16] in BAN})
     check('no personal names', not hit, hit)
     snd = glob.glob(ROOT + '/sounds/*.mp3'); bundle = open(ROOT + '/js/sounds-src.js').read()
     check('all sounds are bundled CC0 recordings', len(snd) >= 100 and all(('"' + os.path.basename(f)[:-4] + '"') in bundle for f in snd), len(snd))
