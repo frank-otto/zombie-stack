@@ -45,7 +45,7 @@ const W = createWorld(renderer, QUALITY[S.q], 11); const scene = W.scene;
 const camera = new THREE.PerspectiveCamera(45, 1, .1, 400);
 const F = createFX(scene, W.soft, W.smokeTex);
 let composer, bloom;
-function buildComposer() { if (composer) composer.dispose(); composer = new EffectComposer(renderer); composer.addPass(new RenderPass(scene, camera)); bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), .3, .45, .88); composer.addPass(bloom); composer.addPass(new OutputPass()); }
+function buildComposer() { if (composer) { composer.passes.forEach(p => p.dispose && p.dispose()); composer.dispose(); } /* EffectComposer.dispose() frees only its own render targets, not the passes (bloom mips etc.) */ composer = new EffectComposer(renderer); composer.addPass(new RenderPass(scene, camera)); bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), .3, .45, .88); composer.addPass(bloom); composer.addPass(new OutputPass()); }
 function applyQuality(qn, user) {
   S.q = qn; if (user) { S.qUser = true; ls.set('zs-q', qn); } const q = QUALITY[qn];
   renderer.shadowMap.enabled = q.shadows; W.key.castShadow = q.shadows; if (q.shadows) { W.key.shadow.mapSize.set(q.shadowSize, q.shadowSize); if (W.key.shadow.map) { W.key.shadow.map.dispose(); W.key.shadow.map = null; } }
