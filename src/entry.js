@@ -26,7 +26,9 @@ const DIFF = {
 };
 const MILESTONES = [3, 6, 10, 15, 20, 25, 30, 35, 40, 50, 60, 70, 80, 90, 100];
 const KEEP = 7, ROPE = 2.1, CLAW = .36, HREF = 8, GRAV = 9.82;
-const S = { state: 'menu', mode: 'classic', lang: ls.get('zs-lang', 'en'), diff: ls.get('zs-diff', 'medium'), kids: ls.get('zs-kids', '0') === '1', q: ls.get('zs-q', ''), qUser: !!ls.get('zs-q', ''),
+// language follows the phone/browser (German devices → DE, else EN) until the player picks one with the DE/EN toggle
+function autoLang() { try { const l = (navigator.languages && navigator.languages[0]) || navigator.language || ''; return /^de\b/i.test(l) ? 'de' : 'en'; } catch (e) { return 'en'; } }
+const S = { state: 'menu', mode: 'classic', lang: (ls.get('zs-lang', '') || autoLang()), diff: ls.get('zs-diff', 'medium'), kids: ls.get('zs-kids', '0') === '1', q: ls.get('zs-q', ''), qUser: !!ls.get('zs-q', ''),
   name: ls.get('zs-name', 'Player') || 'Player', gt: 0, pt: 0, ts: 1, score: 0, combo: 0, bestCombo: 0, perfects: 0, lives: 3, timeLeft: 0, H: 0, maxH: 0, topY: BASE_TOP, focus: 2.4, n: 0, ms: 0,
   glue: 0, slow: 0, freezeT: 0, wind: 0, gust: null, gustNext: 9, phi: 0, phiV: 0, vx: 0, vy: 0, az: .12, newBest: false, end: '', shake: 0 };
 if (!DIFF[S.diff] || S.diff === 'kids') S.diff = 'medium';
@@ -211,7 +213,7 @@ function popText(txt, col, big = 1) { (window.__pops = window.__pops || []).push
   setTimeout(() => { const el = document.createElement('div'); el.className = 'pop'; el.textContent = txt; el.style.color = col; el.style.fontSize = (30 * big * (VW < 600 ? .78 : 1)) + 'px'; $('pops').appendChild(el); setTimeout(() => el.remove(), 1400); }, delay); }
 function banner(s) { (window.__banners = window.__banners || []).push(s); const el = $('banner'); el.textContent = s; el.classList.remove('show'); void el.offsetWidth; el.classList.add('show'); }
 function toast(s) { const el = $('toast'); el.textContent = s; el.classList.add('show'); setTimeout(() => el.classList.remove('show'), 2500); }
-function flashScreen(k) { const el = $('flash'); el.style.transition = 'none'; el.style.opacity = Math.min(.28, k); void el.offsetWidth; el.style.transition = 'opacity .6s ease-out'; el.style.opacity = 0; }
+function flashScreen(k) { const el = $('flash'); el.classList.add('on'); clearTimeout(flashScreen._t); flashScreen._t = setTimeout(() => el.classList.remove('on'), 650); el.style.transition = 'none'; el.style.opacity = Math.min(.28, k); void el.offsetWidth; el.style.transition = 'opacity .6s ease-out'; el.style.opacity = 0; }
 
 // ---------------- input ----------------
 let isTouch = false;
@@ -369,7 +371,7 @@ let last = performance.now();
 function advance(now) { const dt = Math.max(0, (now - last) / 1000) || 0; last = Math.max(last, now || 0); if (!window.__zsManual) { step(dt); fpsTick(dt); } return dt; } // rAF stamps can be earlier than the last one: never run the clock backwards
 function frameLoop(now) { advance(now); render(); requestAnimationFrame(frameLoop); }
 requestAnimationFrame(frameLoop);
-window.__zs = { S, W, step: (dt, n = 1) => { for (let i = 0; i < n; i++) step(dt); render(); }, stepq: (dt, n = 1) => { for (let i = 0; i < n; i++) step(dt); }, log: A.log, quality: q => q ? applyQuality(q, true) : S.q, renderer, start, end: endRun, toMenu, drop, collapse, cheat: n => cheatStack(n),
+window.__zs = { S, audioState: () => A.audioState(), W, step: (dt, n = 1) => { for (let i = 0; i < n; i++) step(dt); render(); }, stepq: (dt, n = 1) => { for (let i = 0; i < n; i++) step(dt); }, log: A.log, quality: q => q ? applyQuality(q, true) : S.q, renderer, start, end: endRun, toMenu, drop, collapse, cheat: n => cheatStack(n),
   cur: () => cur && { type: cur.type, state: cur.state, potion: cur.potion && cur.potion.kind, size: cur.size, x: cur.g.position.x, y: cur.g.position.y, age: S.gt - cur.spawnT }, predict: () => cur ? predictX(cur) : null, onTarget: () => !!S.onTarget, theta: () => theta,
   tower: () => tower.map(p => ({ type: p.type, x: p.body.position.x, y: p.body.position.y, frozen: !!p.frozen, locked: !!p.locked, top: topOf(p), q: [p.body.quaternion.x, p.body.quaternion.y, p.body.quaternion.z, p.body.quaternion.w] })), pieces: () => pieces.map(p => ({ type: p.type, state: p.state, y: p.body.position.y })),
   respawn: (type, potion = null) => { if (cur && cur.state === 'hang') { scene.remove(cur.g); disposePiece(cur); pieces.splice(pieces.indexOf(cur), 1); cur = null; } while (queue.length < 2) genNext(); queue[0] = { type, potion }; spawn(); },

@@ -17,7 +17,7 @@ Midnight in the graveyard. A creaky crane swings zombies, coffins, tombstones an
 **Modes:** Classic (how high can you go – misses cost a life) and Timed (as high as possible before time runs out).
 **Difficulty:** Easy / Medium / Hard (Hard adds wind gusts). **Kids mode:** gentle auto-straighten, misses just go "poof", never game over.
 
-Highscore per mode, English / German, 1080×1350 share card of your tower, quality levels (Normal by default, auto step-down only if the frame rate stays low).
+Highscore per mode, English / German (follows your phone or browser, with a small DE/EN toggle), 1080×1350 share card of your tower, quality levels (Normal by default, auto step-down only if the frame rate stays low).
 
 ## Tech
 - Three.js (WebGL) scene: graveyard, storm sky shader with clouds, moon and lightning, rain, fog, crane rig.
@@ -38,3 +38,6 @@ Built with Grok Bot. Sound credits by source ID in `LICENSES/SOUNDS.md`. Code li
 ![Stacking](screenshots/stacking.jpg)
 ![Full moon at 14 m](screenshots/full-moon.jpg)
 ![Share card](screenshots/share-card.jpg)
+
+## Tests
+`python3 test/test_mobile.py`: 8 phone configurations (iPhone 13 / 8 / SE in WebKit, Pixel 7 in Chromium, portrait and landscape). It checks that every button is tappable and at least 44 px, that nothing is cut off or scrolls, the auto language, one tap to play with sound, touch control and flat memory.
